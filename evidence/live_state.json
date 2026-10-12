@@ -61,6 +61,19 @@
       "hash": "0x35c0a9dc667b1fd0fa81db066505d7067cdd69ddb0d772649895f2f3eb40972e",
       "status": "ACCEPTED",
       "ok": true
+    },
+    {
+      "label": "register_watch #recover",
+      "hash": "0x2e7be828357521a10a711a4f1e6b5dfcc77df80d528bac3dd79aaf63c7138b76",
+      "status": "FINALIZED",
+      "ok": true
+    },
+    {
+      "label": "set_baseline recover v1",
+      "hash": "0x125953f0a6b238a50484283632bf06c8d8f41fd7dee7019df465e751af752deb",
+      "status": "ACCEPTED",
+      "ok": true
     }
-  ]
+  ],
+  "recover_watch": 3
 }
