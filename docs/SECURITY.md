@@ -41,3 +41,5 @@ state that blocks; `UNKNOWN`/`STALE` also tell consumers not to rely.
 - A source that serves different content to different validators can cause disagreement or be gamed.
 - Studionet deployment is a development network, not an audited production deployment.
 - Not legal advice; "drift" means "the page text no longer supports the recorded commitments".
+- Source-side caching: a CDN-fronted page (for example raw.githubusercontent.com, `max-age=300`) can
+  serve validators stale bytes, delaying detection by the cache lifetime. Observed live; see DEPLOYMENT.md.

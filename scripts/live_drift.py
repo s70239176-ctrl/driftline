@@ -10,7 +10,7 @@ fixtures/policy_mutable.txt:
   DRIFTLINE_STAGE=recheck ...     # expect STABLE against the new baseline
 
 Needs DRIFTLINE_FIXTURE_BASE. Run through the `gltest` CLI (it initialises the contracts dir/network) from the repo root.
-State (address, tx hashes) is kept in artifacts/live_state.json (git-ignored); copy it into
+State (address, tx hashes) is kept in evidence/live_state.json (git-ignored); copy it into
 docs/DEPLOYMENT.md. The deployer is the genlayer-test default Studionet account; no key is read or printed.
 """
 import json
@@ -23,7 +23,7 @@ from gltest.assertions import tx_execution_succeeded
 
 BASE = os.environ["DRIFTLINE_FIXTURE_BASE"].rstrip("/")
 FOCUS = "Data privacy and refund commitments to customers"
-STATE = "artifacts/live_state.json"
+STATE = "evidence/live_state.json"
 WAIT = {"wait_interval": 10000, "wait_retries": 40}
 TX = {"consensus_max_rotations": 3, **WAIT}
 
@@ -34,14 +34,27 @@ def load():
 
 
 def save(st):
-    os.makedirs("artifacts", exist_ok=True)
+    os.makedirs("evidence", exist_ok=True)
     with open(STATE, "w", encoding="utf-8") as f:
         json.dump(st, f, indent=2)
 
 
+def dev_account():
+    """Persistent throwaway Studionet key (git-ignored `.dev-key`). get_default_account() is random per session."""
+    from genlayer_py import create_account  # noqa: PLC0415
+
+    if os.path.exists(".dev-key"):
+        with open(".dev-key", encoding="utf-8") as f:
+            return create_account(f.read().strip())
+    acct = create_account()
+    with open(".dev-key", "w", encoding="utf-8") as f:
+        f.write(acct.key.hex())
+    return acct
+
+
 def attach(st):
     factory = get_contract_factory(contract_file_path="driftline.py")
-    return factory.build_contract(st["address"], account=get_default_account())
+    return factory.build_contract(st["address"], account=dev_account())
 
 
 def send(st, label, call):
@@ -81,6 +94,16 @@ def main(stage):
         print(c.get_watch(args=[1]).call())
         w = c.get_watch(args=[1]).call()
         print(c.get_observation(args=[1, w["obs_count"]]).call())
+    elif stage == "lifecycle":
+        # owner-controlled lifecycle on the canonical contract, no fixture change needed
+        send(st, "register_watch #2 (stable page)", c.register_watch(args=[f"{BASE}/policy_stable.txt", FOCUS, 2]))
+        wid = c.watch_count_view().call()
+        send(st, "set_baseline #2", c.set_baseline(args=[wid]))
+        w = c.get_watch(args=[wid]).call()
+        print("reliance before:", c.reliance_status(args=[wid, w["baseline_ts"] + 5, 3600]).call())
+        send(st, "deactivate #2", c.deactivate(args=[wid]))
+        print("reliance after deactivate:", c.reliance_status(args=[wid, w["baseline_ts"] + 5, 3600]).call())
+        print(c.get_watch(args=[wid]).call())
     elif stage == "rebaseline":
         send(st, "set_baseline v2", c.set_baseline(args=[1]))
         print(c.get_watch(args=[1]).call())
