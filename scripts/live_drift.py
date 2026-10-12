@@ -3,13 +3,13 @@
 The drift path needs a page that changes at a fixed URL, so it is staged around a git push of
 fixtures/policy_mutable.txt:
 
-  python scripts/live_drift.py deploy      # deploy canonical contract, register watch, record baseline (page = v1)
+  DRIFTLINE_STAGE=deploy gltest scripts/live_drift.py -s --network studionet   # deploy canonical contract, register watch, record baseline (page = v1)
   # ... overwrite fixtures/policy_mutable.txt with fixtures/policy_mutable_v2.txt, commit, push ...
-  python scripts/live_drift.py check       # expect DRIFTED (latched, evidence = the removed no-sale clause)
-  python scripts/live_drift.py rebaseline  # owner records v2 as a new baseline (version 2, STABLE)
-  python scripts/live_drift.py recheck     # expect STABLE against the new baseline
+  DRIFTLINE_STAGE=check ...       # expect DRIFTED (latched, evidence = the removed no-sale clause)
+  DRIFTLINE_STAGE=rebaseline ...  # owner records v2 as a new baseline (version 2, STABLE)
+  DRIFTLINE_STAGE=recheck ...     # expect STABLE against the new baseline
 
-Needs DRIFTLINE_FIXTURE_BASE. Run with `gltest`'s Python (see requirements-test.txt) from the repo root.
+Needs DRIFTLINE_FIXTURE_BASE. Run through the `gltest` CLI (it initialises the contracts dir/network) from the repo root.
 State (address, tx hashes) is kept in artifacts/live_state.json (git-ignored); copy it into
 docs/DEPLOYMENT.md. The deployer is the genlayer-test default Studionet account; no key is read or printed.
 """
@@ -87,6 +87,10 @@ def main(stage):
         print(c.get_baseline(args=[1]).call())
     else:
         sys.exit(__doc__)
+
+
+def test_stage():  # entry point for `gltest scripts/live_drift.py`
+    main(os.environ["DRIFTLINE_STAGE"])
 
 
 if __name__ == "__main__":
