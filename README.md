@@ -11,7 +11,7 @@ Validators independently fetch the page, re-check which recorded commitments are
 | Deployment tx | `0x34147ef61c8aff30f6613a8c14bd49c556d703a5afde414f60f8dfda2fec8751` (FINALIZED, MAJORITY_AGREE) |
 | Source | `contracts/driftline.py`, deployed from commit `dda0588`; on-chain code SHA-256 equals the repo file |
 | Tests | 103 Direct Mode, 4 Studionet integration, GenVM lint and SDK validation passing |
-| Live drift | tx `0x499f87d9…ade3957`: `DRIFTED`, severity 3, evidence = the removed "never sell your personal data" clause |
+| Live drift and recovery | `DRIFTED` (tx `0x499f87d9…ade3957`, evidence = the removed "never sell your personal data" clause), then owner re-baseline to version 2 and a `STABLE` re-check (watch #3, txs in DEPLOYMENT.md) |
 
 Full evidence: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Overlap analysis: [DECISION.md](DECISION.md).
 
@@ -60,7 +60,7 @@ See [docs/INTEGRATION.md](docs/INTEGRATION.md) and [docs/SECURITY.md](docs/SECUR
 
 ## Limitations
 
-Honest-majority validator assumption; plain HTTP GET only (no JS-rendered or personalised pages); 8000 normalised characters per page; a baseline cannot prove completeness (omitted commitments are not detected); severity is model judgement near the threshold; source CDN caching delays detection (observed live, see DEPLOYMENT.md); Studionet is a development network, not an audited production deployment. Re-baselining after drift was tested in Direct Mode but **not** shown live (see DEPLOYMENT.md).
+Honest-majority validator assumption; plain HTTP GET only (no JS-rendered or personalised pages); 8000 normalised characters per page; a baseline cannot prove completeness (omitted commitments are not detected); severity is model judgement near the threshold; source CDN caching delays detection (observed live, see DEPLOYMENT.md); Studionet is a development network, not an audited production deployment.
 
 ## Verify
 

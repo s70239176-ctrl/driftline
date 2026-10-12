@@ -17,4 +17,4 @@ Driftline is a standalone GenLayer Intelligent Contract that tells other contrac
 
 ## Reviewer fast path
 
-See README "Verify". Live evidence table: docs/DEPLOYMENT.md. Known gap: re-baseline-after-drift is covered in Direct Mode only, not shown live.
+See README "Verify". Live evidence table: docs/DEPLOYMENT.md. The full DRIFTED -> owner re-baseline -> STABLE cycle is shown live on watch #3.

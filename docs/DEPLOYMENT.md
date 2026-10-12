@@ -18,7 +18,7 @@
 
 ## Live transactions on the canonical contract
 
-All were FINALIZED with MAJORITY_AGREE when last queried.
+All 15 transactions on the canonical contract were FINALIZED with MAJORITY_AGREE when last queried.
 
 | Scenario | Action | Tx | Stored / observed result |
 |---|---|---|---|
@@ -31,17 +31,20 @@ All were FINALIZED with MAJORITY_AGREE when last queried.
 | lifecycle | `register_watch` #2 (stable page) | `0xd9a997c6d217cffd24401e9926574e274964f24f1382061a6d41b3a014173f49` | created |
 | lifecycle | `set_baseline(2)` | `0x3003e170e9b4a37679497956842e292b09a0ed9ad9dfb52a1149d847a0dd3a1e` | `reliance_status` = `RELIABLE` |
 | lifecycle | `deactivate(2)` (owner, persistent throwaway key) | `0x35c0a9dc667b1fd0fa81db066505d7067cdd69ddb0d772649895f2f3eb40972e` | `reliance_status` = `UNKNOWN` |
+| recovery: setup | `register_watch` #3 (owner = persistent throwaway key, page `policy_recover.txt`) | `0x2e7be828357521a10a711a4f1e6b5dfcc77df80d528bac3dd79aaf63c7138b76` | created |
+| recovery: baseline | `set_baseline(3)` (page v1) | `0x125953f0a6b238a50484283632bf06c8d8f41fd7dee7019df465e751af752deb` | `STABLE`, version 1, baseline hash `3cf9e1b5…40c2` |
+| **recovery: drift** | `check(3)` after the page was weakened and the CDN cache expired | `0x29259fe26cb8e14b7a7ac84c484f59dd3444421e67096e10282e09764204435e` | **`DRIFTED`**, severity 2, evidence `ABSENT` = the removed no-sale clause, `missing 1` |
+| **recovery: re-baseline** | `set_baseline(3)` by the owner (page now v2) | `0xcfaa6a17dfe34b99c035549c84703588d132103ea0330d2a8f1f6cd3dc98d3e8` | version 2, `STABLE`, baseline hash `b712cd6a…af64`, `prev_baseline_hash` = `3cf9e1b5…40c2` (lineage kept), definition hash unchanged |
+| **recovery: re-check** | `check(3)` against the new baseline | `0x1ec70d35d26f2d985710ca113affbdb15b88dc536740a9b4a9da46852d0c0fe6` | `STABLE`, `missing 0`, observation recorded against version 2 |
 
 **CDN note.** raw.githubusercontent.com serves with `Cache-Control: max-age=300`. The first check ran
 about four minutes after the fixture push and read the cached old page, so it correctly reported
 `STABLE`. The contract reports what validators actually fetch; the second check, after expiry, detected
 the drift. Real consumers should expect source-cache latency.
 
-**Not demonstrated live:** re-baselining after drift (`set_baseline` v2 followed by a stable `check`).
-It is covered in Direct Mode (`test_rebaseline_after_drift_versions_and_keeps_lineage`), but on the
-canonical deployment the owner key of watch #1 was an ephemeral session key and was not kept, so the
-attempt from a different account was (correctly) rejected. This is a runbook flaw, not a contract bug;
-`scripts/live_drift.py` now keeps a persistent git-ignored throwaway key (`.dev-key`).
+**Watch #1 owner note.** Watch #1 was registered by an ephemeral per-session key that was not kept, so the
+re-baseline attempt from a different account was (correctly) rejected. Re-baselining after drift is
+demonstrated live on watch #3 instead, which is owned by a persistent throwaway key (`.dev-key`, git-ignored).
 
 ## Test results
 
