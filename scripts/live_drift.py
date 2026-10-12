@@ -26,6 +26,7 @@ FOCUS = "Data privacy and refund commitments to customers"
 STATE = "evidence/live_state.json"
 WAIT = {"wait_interval": 10000, "wait_retries": 40}
 TX = {"consensus_max_rotations": 3, **WAIT}
+WID = int(os.environ.get("DRIFTLINE_WATCH", "1"))
 
 
 def load():
@@ -88,12 +89,20 @@ def main(stage):
         return
     st = load()
     c = attach(st)
-    if stage in ("check", "recheck"):
-        time.sleep(65)  # check cooldown is 60 s of chain time
-        send(st, stage, c.check(args=[1]))
-        print(c.get_watch(args=[1]).call())
-        w = c.get_watch(args=[1]).call()
-        print(c.get_observation(args=[1, w["obs_count"]]).call())
+    if stage == "register_recover":
+        # watch owned by the persistent dev key, on a page we will weaken later
+        send(st, "register_watch #recover", c.register_watch(args=[f"{BASE}/policy_recover.txt", FOCUS, 2]))
+        wid = c.watch_count_view().call()
+        st["recover_watch"] = wid
+        save(st)
+        send(st, "set_baseline recover v1", c.set_baseline(args=[wid]))
+        print(c.get_watch(args=[wid]).call())
+    elif stage in ("check", "recheck"):
+        time.sleep(int(os.environ.get("DRIFTLINE_PRE_SLEEP", "65")))  # cooldown 60 s; >300 s for CDN expiry
+        send(st, f"{stage} #{WID}", c.check(args=[WID]))
+        w = c.get_watch(args=[WID]).call()
+        print(w)
+        print(c.get_observation(args=[WID, w["obs_count"]]).call())
     elif stage == "lifecycle":
         # owner-controlled lifecycle on the canonical contract, no fixture change needed
         send(st, "register_watch #2 (stable page)", c.register_watch(args=[f"{BASE}/policy_stable.txt", FOCUS, 2]))
@@ -105,9 +114,9 @@ def main(stage):
         print("reliance after deactivate:", c.reliance_status(args=[wid, w["baseline_ts"] + 5, 3600]).call())
         print(c.get_watch(args=[wid]).call())
     elif stage == "rebaseline":
-        send(st, "set_baseline v2", c.set_baseline(args=[1]))
-        print(c.get_watch(args=[1]).call())
-        print(c.get_baseline(args=[1]).call())
+        send(st, f"set_baseline v2 #{WID}", c.set_baseline(args=[WID]))
+        print(c.get_watch(args=[WID]).call())
+        print(c.get_baseline(args=[WID]).call())
     else:
         sys.exit(__doc__)
 
